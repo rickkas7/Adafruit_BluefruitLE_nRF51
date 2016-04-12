@@ -1,0 +1,75 @@
+#!/bin/bash
+
+workdir=~/Documents/src/alarm/ParticleWebSrv/particle/ble
+particledir=../Adafruit_BLE
+
+libsrc=(Adafruit_BLE.cpp \
+    Adafruit_BLE.h  \
+    Adafruit_BluefruitLE_SPI.h \
+    Adafruit_BluefruitLE_SPI.cpp \
+    Adafruit_BluefruitLE_UART.cpp \
+    Adafruit_BluefruitLE_UART.h)
+
+utilitysrc=(Adafruit_FIFO.cpp \
+    Adafruit_FIFO.h \
+    errors.h \
+    sdep.h \
+    TimeoutTimer.h)
+
+if [ $# -eq 0 ]
+then
+    echo "missing parameter"
+elif [ $1 == "atow" ]
+then
+    echo "atow - copy Adafruit repository format to work directory"
+    for f in "${libsrc[@]}"
+    do
+        mkdir -p ${workdir}/Adafruit_BLE
+        cp $f ${workdir}/Adafruit_BLE
+    done
+
+    for f in "${utilitysrc[@]}"
+    do
+        cp utility/$f ${workdir}/Adafruit_BLE
+    done
+
+
+elif [ $1 == "wtoa" ]
+then
+    echo "wtoa - copy work directory to Adafruit repository local directory"
+
+    for f in "${libsrc[@]}"
+    do
+        cp ${workdir}/Adafruit_BLE/$f .
+    done
+
+    for f in "${utilitysrc[@]}"
+    do
+        cp ${workdir}/Adafruit_BLE/$f utility/
+    done
+
+elif [ $1 == "wtop" ]
+then
+    echo "wtop - copy work directory to Particle format local directory"
+
+    for f in "${libsrc[@]}"
+    do
+        cp ${workdir}/Adafruit_BLE/$f ${particledir}/firmware
+    done
+
+    for f in "${utilitysrc[@]}"
+    do
+        cp ${workdir}/Adafruit_BLE/$f ${particledir}/firmware
+    done
+
+    cp ${workdir}/atcommand.cpp ${particledir}/firmware/examples/atcommand.ino
+
+else
+    echo "unknown parameter"
+fi
+
+
+
+
+
+

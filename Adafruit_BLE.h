@@ -38,10 +38,10 @@
 #define _Adafruit_BLE_H_
 
 #include <stdint.h>
-#include <Arduino.h>
-#include "utility/sdep.h"
-#include "utility/errors.h"
-#include "utility/TimeoutTimer.h"
+#include "application.h"
+#include "sdep.h"
+#include "errors.h"
+#include "TimeoutTimer.h"
 
 #if defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL) 
 #define SerialDebug SERIAL_PORT_USBVIRTUAL
@@ -102,10 +102,8 @@ class Adafruit_BLE : public Stream
 
     virtual bool setMode(uint8_t mode) = 0;
 
-    bool sendCommandCheckOK(const __FlashStringHelper *cmd);
     bool sendCommandCheckOK(const char cmd[]);
 
-    bool sendCommandWithIntReply(const __FlashStringHelper *cmd, int32_t *reply);
     bool sendCommandWithIntReply(const char cmd[], int32_t *reply);
 
     // Read one line of response into internal buffer
@@ -124,6 +122,8 @@ class Adafruit_BLE : public Stream
 
     // read one line and convert the string to integer number
     int32_t readline_parseInt(void);
+
+    size_t println(const char *str);
 };
 
 //struct GattServer_t

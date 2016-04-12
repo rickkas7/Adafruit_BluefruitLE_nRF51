@@ -36,9 +36,8 @@
 #ifndef _ADAFRUIT_BLE_SPI_H_
 #define _ADAFRUIT_BLE_SPI_H_
 
-#include <Adafruit_BLE.h>
-#include <SPI.h>
-#include "utility/Adafruit_FIFO.h"
+#include "Adafruit_BLE/Adafruit_BLE.h"
+#include "Adafruit_FIFO.h"
 
 #define SPI_CS_ENABLE()           digitalWrite(m_cs_pin, LOW)
 #define SPI_CS_DISABLE()          digitalWrite(m_cs_pin, HIGH)
@@ -50,6 +49,17 @@
 #define memclr(buffer, size)  memset(buffer, 0, size)
 
 
+class SPISettings {
+public:
+	unsigned int speedMaximum; // speedMaximum: The maximum speed of communication. For a SPI chip rated up to 20 MHz, use 20000000.
+	uint8_t dataOrder; // dataOrder: MSBFIRST or LSBFIRST
+	uint8_t dataMode; // dataMode : SPI_MODE0, SPI_MODE1, SPI_MODE2, or SPI_MODE3
+
+	SPISettings(unsigned int speedMaximum, uint8_t dataOrder, uint8_t dataMode) : speedMaximum(speedMaximum), dataOrder(dataOrder), dataMode(dataMode) {
+	}
+};
+
+
 class Adafruit_BluefruitLE_SPI : public Adafruit_BLE
 {
   private:
@@ -57,6 +67,7 @@ class Adafruit_BluefruitLE_SPI : public Adafruit_BLE
     int8_t          m_cs_pin;
     int8_t          m_irq_pin;
     int8_t          m_rst_pin;
+    SPIClass 		*m_spiPort;
 
     // software SPI pins
     int8_t          m_sck_pin;
@@ -85,7 +96,7 @@ class Adafruit_BluefruitLE_SPI : public Adafruit_BLE
 
   public:
     // Constructor
-    Adafruit_BluefruitLE_SPI(int8_t csPin, int8_t irqPin, int8_t rstPin = -1);
+    Adafruit_BluefruitLE_SPI(SPIClass *spiPort, int8_t csPin, int8_t irqPin, int8_t rstPin = -1);
     Adafruit_BluefruitLE_SPI(int8_t clkPin, int8_t misoPin, int8_t mosiPin, int8_t csPin, int8_t irqPin, int8_t rstPin);
 
     // HW initialisation
@@ -93,6 +104,9 @@ class Adafruit_BluefruitLE_SPI : public Adafruit_BLE
     void end(void);
 
     bool setMode(uint8_t new_mode);
+
+    void beginTransaction(const SPISettings &settings);
+    void endTransaction();
 
     // Class Print virtual function Interface
     virtual size_t write(uint8_t c);
@@ -107,5 +121,6 @@ class Adafruit_BluefruitLE_SPI : public Adafruit_BLE
     virtual void flush(void);
     virtual int  peek(void);
 };
+
 
 #endif

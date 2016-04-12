@@ -34,13 +34,16 @@
 */
 /**************************************************************************/
 #include "Adafruit_BluefruitLE_SPI.h"
-#include <Arduino.h>
 #include <stdlib.h>
 
 #ifndef min
   #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
+
+#define highByte(x) (((x) >> 8) & 0xff)
+#define lowByte(x) ((x) & 0xff)
+#define word(h, l) (((h) << 8) | (l))
 
 SPISettings bluefruitSPI(4000000, MSBFIRST, SPI_MODE0);
 
@@ -57,7 +60,7 @@ SPISettings bluefruitSPI(4000000, MSBFIRST, SPI_MODE0);
     @param[in]  rstPin
 */
 /******************************************************************************/
-Adafruit_BluefruitLE_SPI::Adafruit_BluefruitLE_SPI(int8_t csPin, int8_t irqPin, int8_t rstPin) :
+Adafruit_BluefruitLE_SPI::Adafruit_BluefruitLE_SPI(SPIClass *spiPort, int8_t csPin, int8_t irqPin, int8_t rstPin) :
     m_rx_fifo(m_rx_buffer, sizeof(m_rx_buffer), 1, true)
 {
   _physical_transport = BLUEFRUIT_TRANSPORT_HWSPI;
@@ -65,6 +68,7 @@ Adafruit_BluefruitLE_SPI::Adafruit_BluefruitLE_SPI(int8_t csPin, int8_t irqPin, 
   m_cs_pin  = csPin;
   m_irq_pin = irqPin;
   m_rst_pin = rstPin;
+  m_spiPort = spiPort;
 
   m_miso_pin = m_mosi_pin = m_sck_pin = -1;
 
@@ -128,7 +132,7 @@ bool Adafruit_BluefruitLE_SPI::begin(boolean v)
 
   if (m_sck_pin == -1) {
     // hardware SPI
-    SPI.begin();
+    m_spiPort->begin();
   } else {
     pinMode(m_sck_pin, OUTPUT);
     digitalWrite(m_sck_pin, LOW);
@@ -169,9 +173,24 @@ bool Adafruit_BluefruitLE_SPI::begin(boolean v)
 void Adafruit_BluefruitLE_SPI::end(void)
 {
   if (m_sck_pin == -1) {
-    SPI.end();
+    m_spiPort->end();
   }
 }
+
+void Adafruit_BluefruitLE_SPI::beginTransaction(const SPISettings &settings)
+{
+	m_spiPort->setClockSpeed(settings.speedMaximum, HZ);
+	m_spiPort->setBitOrder(settings.dataOrder);
+	m_spiPort->setDataMode(settings.dataMode);
+
+	digitalWrite(m_cs_pin, LOW);
+}
+
+void Adafruit_BluefruitLE_SPI::endTransaction()
+{
+	digitalWrite(m_cs_pin, HIGH);
+}
+
 
 /******************************************************************************/
 /*!
@@ -246,7 +265,7 @@ bool Adafruit_BluefruitLE_SPI::sendPacket(uint16_t command, const uint8_t* buf, 
 
   // Starting SPI transaction
   if (m_sck_pin == -1)
-    SPI.beginTransaction(bluefruitSPI);
+    beginTransaction(bluefruitSPI);
 
   SPI_CS_ENABLE();
 
@@ -270,7 +289,7 @@ bool Adafruit_BluefruitLE_SPI::sendPacket(uint16_t command, const uint8_t* buf, 
 
   SPI_CS_DISABLE();
   if (m_sck_pin == -1)
-    SPI.endTransaction();
+    endTransaction();
 
   return result;
 }
@@ -543,7 +562,7 @@ bool Adafruit_BluefruitLE_SPI::getPacket(sdepMsgResponse_t* p_response)
   sdepMsgHeader_t* p_header = &p_response->header;
 
   if (m_sck_pin == -1)
-    SPI.beginTransaction(bluefruitSPI);
+    beginTransaction(bluefruitSPI);
   SPI_CS_ENABLE();
 
   tt.set(_timeout);
@@ -625,7 +644,7 @@ bool Adafruit_BluefruitLE_SPI::getPacket(sdepMsgResponse_t* p_response)
 
   SPI_CS_DISABLE();
   if (m_sck_pin == -1)
-    SPI.endTransaction();
+	  endTransaction();
 
   return result;
 }
@@ -651,7 +670,7 @@ void Adafruit_BluefruitLE_SPI::spixfer(void *buff, size_t len) {
 /******************************************************************************/
 uint8_t Adafruit_BluefruitLE_SPI::spixfer(uint8_t x) {
   if (m_sck_pin == -1) {
-    uint8_t reply = SPI.transfer(x);
+    uint8_t reply = m_spiPort->transfer(x);
     //SerialDebug.println(reply, HEX);
     return reply;
   }

@@ -37,14 +37,16 @@
 #ifndef _ADAFRUIT_BLE_UART_H_
 #define _ADAFRUIT_BLE_UART_H_
 
-#include "Arduino.h"
-#include <Adafruit_BLE.h>
+#include "application.h"
+#include "Adafruit_BLE/Adafruit_BLE.h"
 
-#define SOFTWARE_SERIAL_AVAILABLE   ( ! (defined (_VARIANT_ARDUINO_DUE_X_) || defined (_VARIANT_ARDUINO_ZERO_) || defined (ARDUINO_STM32F2_FEATHER)) )
+#define SOFTWARE_SERIAL_AVAILABLE   ( ! (defined (_VARIANT_ARDUINO_DUE_X_) || defined (_VARIANT_ARDUINO_ZERO_) || defined (ARDUINO_STM32F2_FEATHER) || defined(SPARK_PLATFORM)) )
 
 #if SOFTWARE_SERIAL_AVAILABLE
   #include <SoftwareSerial.h>
 #endif
+
+typedef USARTSerial HardwareSerial;
 
 class Adafruit_BluefruitLE_UART : public Adafruit_BLE
 {

@@ -209,32 +209,6 @@ bool Adafruit_BLE::isVersionAtLeast(char * versionString)
 
 /******************************************************************************/
 /*!
-    @brief  Send a command from a flash string, and parse an int reply
-*/
-/******************************************************************************/
-bool Adafruit_BLE::sendCommandWithIntReply(const __FlashStringHelper *cmd, int32_t *reply)
-{
-  bool result;
-  uint8_t current_mode = _mode;
-
-  // switch mode if necessary to execute command
-  if ( current_mode == BLUEFRUIT_MODE_DATA ) setMode(BLUEFRUIT_MODE_COMMAND);
-
-  println(cmd);                   // send command
-  if (_verbose) {
-    SerialDebug.print( F("\n<- ") );
-  }
-  (*reply) = readline_parseInt(); // parse integer response
-  result = waitForOK();
-
-  // switch back if necessary
-  if ( current_mode == BLUEFRUIT_MODE_DATA ) setMode(BLUEFRUIT_MODE_DATA);
-
-  return result;
-}
-
-/******************************************************************************/
-/*!
     @brief  Send a command from a SRAM string, and parse an int reply
 */
 /******************************************************************************/
@@ -250,29 +224,6 @@ bool Adafruit_BLE::sendCommandWithIntReply(const char cmd[], int32_t *reply) {
     SerialDebug.print( F("\n<- ") );
   }
   (*reply) = readline_parseInt(); // parse integer response
-  result = waitForOK();
-
-  // switch back if necessary
-  if ( current_mode == BLUEFRUIT_MODE_DATA ) setMode(BLUEFRUIT_MODE_DATA);
-
-  return result;
-}
-
-
-/******************************************************************************/
-/*!
-    @brief  Send a command from a flash string, and parse an int reply
-*/
-/******************************************************************************/
-bool Adafruit_BLE::sendCommandCheckOK(const __FlashStringHelper *cmd)
-{
-  bool result;
-  uint8_t current_mode = _mode;
-
-  // switch mode if necessary to execute command
-  if ( current_mode == BLUEFRUIT_MODE_DATA ) setMode(BLUEFRUIT_MODE_COMMAND);
-
-  println(cmd);       // send command
   result = waitForOK();
 
   // switch back if necessary
@@ -432,4 +383,21 @@ uint16_t Adafruit_BLE::readline(uint16_t timeout, boolean multiline)
 
   return replyidx;
 }
+
+size_t Adafruit_BLE::println(const char *str) {
+	int len = strlen(str);
+
+	char *dst = (char *)malloc(len + 2);
+	if (dst == NULL) {
+		return 0;
+	}
+	strcpy(dst, str);
+	dst[len++] = '\r';
+	dst[len++] = '\n';
+	write((const uint8_t *)dst, len);
+	free(dst);
+
+	return len;
+}
+
 
